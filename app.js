@@ -12,12 +12,13 @@ const S = {
   cfg: Object.assign({ goal: 4, voice: true }, load('cfg', {})),
   events: load('events', []),
   pending: load('pending', []),
+  health: load('health', []),   // lignes health_days : { user_id, day, data, source }
   tab: 'today',
   view: null,          // 'player' | 'finish' | 'log'
   sync: { state: 'off', msg: '' },
   syncing: false,
 };
-function persist() { save('me', S.me); save('cfg', S.cfg); save('events', S.events); save('pending', S.pending); }
+function persist() { save('me', S.me); save('cfg', S.cfg); save('events', S.events); save('pending', S.pending); save('health', S.health); }
 
 function addEvent(kind, data) {
   const ev = { id: uid(), user_id: S.me.id, kind, data, created_at: new Date().toISOString() };
@@ -65,7 +66,49 @@ function profiles() {
   return p;
 }
 const partner = () => Object.values(profiles()).find(p => p.id !== S.me.id) || null;
-const acts = () => S.events.filter(e => e.kind === 'activity');
+/* ---------- Données santé (téléphone / montre) ---------- */
+const num = v => parseFloat(String(v ?? '').replace(/[\s  ]/g, '').replace(',', '.'));
+const fmtN = (n, d = 0) => Number(n).toLocaleString('fr-BE', { maximumFractionDigits: d });
+function healthDay(uidv, day) {
+  const row = S.health.find(r => r.user_id === uidv && r.day === day);
+  if (!row) return null;
+  const d = row.data || {};
+  return { steps: num(d.steps) || 0, kcal: num(d.active_kcal) || 0, km: num(d.distance_km) || 0, source: row.source };
+}
+// Séances enregistrées par la montre ou le téléphone, sans doublon avec celles faites dans Halage.
+function watchActs() {
+  const out = [];
+  for (const row of S.health) for (const w of (row.data && Array.isArray(row.data.workouts) ? row.data.workouts : [])) {
+    const min = num(w.minutes), t = new Date(w.start).getTime();
+    if (!(min >= 10) || isNaN(t)) continue;
+    const end = t + min * 60000;
+    if (S.events.some(e => e.kind === 'activity' && e.user_id === row.user_id && Math.abs(new Date(e.created_at).getTime() - end) < 90 * 60000)) continue;
+    out.push({
+      id: 'hw:' + row.user_id + ':' + w.start, user_id: row.user_id, kind: 'activity', created_at: new Date(end).toISOString(),
+      data: { type: w.type || 'autre', titre: (TYPE_LABEL[w.type] || 'Activité') + ' (montre)', seance: 'montre', duree: Math.round(min * 60),
+              distance: num(w.km) > 0 ? Math.round(num(w.km) * 10) / 10 : null, kcal: num(w.kcal) > 0 ? Math.round(num(w.kcal)) : null },
+    });
+  }
+  return out;
+}
+// Les pesées venues de l'app santé remplissent la courbe de poids (une par jour au maximum).
+function mergeHealthWeights() {
+  if (!S.me) return;
+  const ws = S.me.weights || (S.me.weights = []);
+  for (const r of S.health) {
+    if (r.user_id !== S.me.id) continue;
+    const kg = num(r.data && r.data.weight_kg);
+    if (!(kg > 30 && kg < 300) || ws.some(w => ymd(w.d) === r.day)) continue;
+    ws.push({ d: r.day + 'T08:00:00', kg: Math.round(kg * 10) / 10, src: 'sante' });
+  }
+  ws.sort((a, b) => (a.d < b.d ? -1 : 1));
+}
+function healthCode() {
+  const raw = JSON.stringify({ u: S.cfg.url, k: S.cfg.key, c: S.cfg.couple, i: S.me.id });
+  return btoa(unescape(encodeURIComponent(raw)));
+}
+
+const acts = () => S.events.filter(e => e.kind === 'activity').concat(watchActs()).sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
 const actsOf = (uidv, wk) => acts().filter(e => e.user_id === uidv && (!wk || weekKey(e.created_at) === wk));
 const cheersFor = id => S.events.filter(e => e.kind === 'cheer' && e.data.target === id);
 const colorOf = p => COLORS[p?.color] || COLORS.teal;
@@ -252,6 +295,9 @@ async function sync() {
     const map = new Map(S.events.map(e => [e.id, e]));
     for (const row of await r2.json()) map.set(row.id, row);
     S.events = [...map.values()].sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+    // Santé : si la table n'existe pas encore, on ignore sans bloquer la synchro.
+    const r3 = await fetch(url.trim().replace(/\/+$/, '') + '/rest/v1/health_days?couple=eq.' + encodeURIComponent(couple) + '&select=user_id,day,data,source&order=day.asc&limit=5000', { headers: h });
+    if (r3.ok) { S.health = await r3.json(); mergeHealthWeights(); }
     persist(); setSync('ok', 'Synchronisé ' + new Date().toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' }));
   } catch (err) {
     setSync('err', navigator.onLine ? err.message : 'Hors ligne : tes séances partiront au retour du réseau.');
@@ -383,8 +429,10 @@ function viewToday() {
     </article>`;
   };
   const others = ['A', 'B', 'C', 'run'].filter(id => id !== plan);
+  const hd = healthDay(S.me.id, ymd(new Date()));
   return `<header class="top"><div><p class="eyebrow">Semaine ${programWeek()} du programme</p><h1>Salut ${esc(S.me.name)}</h1></div>${syncDot()}</header>
     ${weekStrip()}
+    ${hd ? `<p class="healthline"><b>${fmtN(hd.steps)}</b> pas · <b>${fmtN(hd.kcal)}</b> kcal actives${hd.km ? ' · <b>' + fmtN(hd.km, 1) + '</b> km' : ''}</p>` : ''}
     <section>
       <h2>${plan ? 'Au programme aujourd’hui' : 'Jour de repos'}</h2>
       ${plan ? card(plan, true) : `<p class="muted">Le repos fait partie du programme : c’est là que le muscle se reconstruit. Une marche sur le halage reste une bonne idée.</p>`}
@@ -485,6 +533,7 @@ function viewDuo() {
       <div class="rings">${rings}</div>
       <div class="duo-sum"><div><b>${total}/${target}</b><span>séances ensemble</span></div><div><b>${streak}</b><span>${streak > 1 ? 'semaines réussies d’affilée' : 'semaine réussie d’affilée'}</span></div></div>
     </section>
+    ${stepsBlock(ppl)}
     <section><h2>Fil d’activité</h2>
       ${feed.length ? `<ul class="feed">${feed.map(e => {
         const p = ps[e.user_id] || { name: '?' }, d = e.data, cheers = cheersFor(e.id), mineC = cheers.some(c => c.user_id === me.id);
@@ -497,6 +546,24 @@ function viewDuo() {
         </li>`;
       }).join('')}</ul>` : '<p class="muted">Aucune séance pour l’instant. La première est toujours la plus dure.</p>'}
     </section>`;
+}
+
+function stepsBlock(ppl) {
+  const today = ymd(new Date());
+  const rows = ppl.map(p => {
+    const td = healthDay(p.id, today);
+    let sum = 0, n = 0;
+    for (let i = 0; i < 7; i++) { const d = healthDay(p.id, ymd(Date.now() - i * DAY)); if (d) { sum += d.steps; n++; } }
+    return { p, today: td ? td.steps : null, avg: n ? sum / n : null };
+  });
+  if (rows.every(r => r.today === null && r.avg === null)) return '';
+  const max = Math.max(10000, ...rows.map(r => r.today || 0));
+  return `<section><h2>Pas aujourd’hui</h2><div class="steps">${rows.map(r => `
+    <div class="steprow"><span class="sname">${esc(r.p.name)}</span>
+      <div class="sbar"><i style="width:${Math.round(((r.today || 0) / max) * 100)}%;background:${colorOf(r.p)}"></i><em style="left:${Math.round((10000 / max) * 100)}%"></em></div>
+      <span class="sval">${r.today === null ? '–' : fmtN(r.today)}</span></div>
+    <p class="tiny savg">${r.avg === null ? 'Pas encore de données santé' : 'Moyenne 7 jours : ' + fmtN(r.avg) + ' pas'}</p>`).join('')}
+    <p class="tiny">Le trait marque 10 000 pas.</p></div></section>`;
 }
 
 function viewSettings() {
@@ -524,6 +591,14 @@ function viewSettings() {
         ${on ? `<button class="btn ghost wide" type="button" data-a="invite">Envoyer le lien à ta copine</button>` : ''}
       </section>
     </form>
+    ${on ? `<section><h2>Données santé du téléphone</h2>
+      <p class="muted">Pas, calories actives, distance, poids et séances de la montre arrivent ici automatiquement.</p>
+      <p class="tiny"><b>Samsung / Android :</b> dans l’app Halage Sync, colle ce code :</p>
+      <div class="copyrow"><code>${esc(healthCode())}</code><button class="btn ghost" type="button" data-a="copy" data-v="${esc(healthCode())}">Copier</button></div>
+      <p class="tiny"><b>iPhone :</b> le Raccourci a besoin de ces 4 valeurs :</p>
+      ${[['URL', c.url.replace(/\/+$/, '') + '/rest/v1/health_days?on_conflict=user_id,day'], ['Clé', c.key], ['Couple', c.couple], ['Identifiant', S.me.id]].map(([l, v]) =>
+        `<div class="copyrow"><span class="clabel">${l}</span><code>${esc(v)}</code><button class="btn ghost" type="button" data-a="copy" data-v="${esc(v)}">Copier</button></div>`).join('')}
+    </section>` : ''}
     <section><h2>Programme</h2>
       <p class="muted">Tu en es à la semaine ${programWeek()}. Les répétitions augmentent un peu chaque semaine pendant 7 semaines, la course aussi.</p>
       <button class="btn ghost wide" type="button" data-a="restart">Recommencer le programme à la semaine 1</button>
@@ -554,6 +629,7 @@ const ACT = {
     if (!confirm('Revenir à la semaine 1 ? Ton historique est conservé.')) return;
     S.me.start = new Date().toISOString(); persist(); addEvent('profile', profileData()); render(); toast('Programme relancé');
   },
+  copy: async d => { try { await navigator.clipboard.writeText(d.v); toast('Copié'); } catch { prompt('Copie ce texte :', d.v); } },
   invite: async () => {
     const link = inviteLink(), text = 'Rejoins-moi sur Halage pour qu’on s’entraîne ensemble : ' + link;
     try {
@@ -562,7 +638,6 @@ const ACT = {
     } catch { /* partage annulé */ }
   },
 };
-const num = v => parseFloat(String(v || '').replace(',', '.'));
 const profileData = () => ({ name: S.me.name, level: S.me.level, color: S.me.color, start: S.me.start });
 
 const FORMS = {

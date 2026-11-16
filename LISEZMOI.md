@@ -32,10 +32,20 @@ Vos séances passent par une petite base Supabase gratuite.
 
 L'icône Halage apparaît. L'app s'ouvre en plein écran et fonctionne même sans réseau. Les séances faites hors ligne partent dès que le réseau revient.
 
+## 4. Brancher les données santé
+
+- **iPhone (Fiona)** : suis `SANTE-IPHONE.md` pour créer le Raccourci, 10 minutes.
+- **Samsung (Michel)** :
+  1. Sur le téléphone, ouvre `https://github.com/<ton-pseudo>/halage/releases/tag/apk` et télécharge **halage-sync.apk**. Android demande d'autoriser l'installation depuis Chrome : accepte.
+  2. Dans Samsung Health > Paramètres > **Health Connect**, autorise le partage des pas, de l'activité, de l'exercice et du poids.
+  3. Ouvre **Halage Sync**, colle le code donné par Halage (Réglages > Données santé), puis touche **Autoriser l'accès santé**. La synchro se fait ensuite toute seule toutes les 3 h.
+
+L'APK est fabriqué automatiquement par GitHub (onglet *Actions* du dépôt) à chaque modification du dossier `android/`. Après une mise à jour, désinstalle l'ancienne version avant d'installer la nouvelle.
+
 ## Bon à savoir
 
 - **Course sur le halage** : laisse l'écran allumé pendant la séance (l'app empêche la mise en veille). Les annonces vocales disent quand courir et quand marcher, tu peux garder le téléphone en main ou dans un brassard.
-- **Poids** : il reste sur ton téléphone et n'est jamais envoyé à la base partagée. Ta copine voit tes séances et tes calories brûlées, pas ta balance.
+- **Poids** : une pesée faite dans l’app santé passe par la base partagée pour remplir ta courbe, mais Halage ne l’affiche qu’à toi. Les pesées saisies à la main restent sur ton téléphone.
 - **Sécurité** : toute personne qui aurait à la fois l'adresse de la base, la clé et votre code de couple pourrait lire vos séances. Ne publie pas le lien d'invitation, envoie-le seulement à ta copine.
 - **Changer de téléphone** : l'historique partagé se récupère via le lien d'invitation. Les pesées, elles, restent sur l'ancien téléphone.
 - Les calories et repères sont des estimations, pas un avis médical.
