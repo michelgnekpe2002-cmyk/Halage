@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "be.halage.sync"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "be.halage.sync"
