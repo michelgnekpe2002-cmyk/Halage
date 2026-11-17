@@ -1,12 +1,12 @@
-# Relier l'app Santé de l'iPhone à Halage (10 minutes)
+# Relier l'app Santé de l'iPhone à FIOSSO SPORT (10 minutes)
 
-Un « Raccourci » Apple lit chaque soir les pas, les calories actives, la distance et le poids du jour dans l'app Santé, puis les envoie à Halage. Il ne lit rien d'autre.
+Un « Raccourci » Apple lit chaque soir les pas, les calories actives, la distance et le poids du jour dans l'app Santé, puis les envoie à FIOSSO SPORT. Il ne lit rien d'autre.
 
-**Avant de commencer :** sur l'iPhone, ouvre Halage > **Réglages** > *Données santé du téléphone*. Tu y trouves 4 valeurs (URL, Clé, Couple, Identifiant) avec un bouton **Copier** à côté de chacune. Tu vas les coller dans le raccourci.
+**Avant de commencer :** sur l'iPhone, ouvre FIOSSO SPORT > **Réglages** > *Données santé du téléphone*. Tu y trouves 4 valeurs (URL, Clé, Couple, Identifiant) avec un bouton **Copier** à côté de chacune. Tu vas les coller dans le raccourci.
 
 ## 1. Créer le raccourci
 
-Ouvre l'app **Raccourcis** (icône violette et rose, déjà installée), onglet **Raccourcis**, bouton **+** en haut à droite. Renomme-le en haut : **Halage Santé**.
+Ouvre l'app **Raccourcis** (icône violette et rose, déjà installée), onglet **Raccourcis**, bouton **+** en haut à droite. Renomme-le en haut : **FIOSSO Santé**.
 
 Ajoute ces actions dans l'ordre (barre de recherche en bas : tape le nom de l'action) :
 
@@ -31,7 +31,7 @@ Ajoute ces actions dans l'ordre (barre de recherche en bas : tape le nom de l'ac
 
 **f. L'envoi**
 10. Action **Obtenir le contenu de l'URL**.
-    - À la place de « URL », colle la valeur **URL** copiée depuis Halage.
+    - À la place de « URL », colle la valeur **URL** copiée depuis FIOSSO SPORT.
     - Touche la flèche **>** pour ouvrir les options :
     - **Méthode** : POST
     - **En-têtes** : ajoute 3 en-têtes :
@@ -49,18 +49,18 @@ Ajoute ces actions dans l'ordre (barre de recherche en bas : tape le nom de l'ac
         - `distance_km` (Nombre) → variable **Distance**
         - `weight_kg` (Nombre) → variable **Poids** (touche la variable et choisis **Valeur**)
 
-Touche **OK**. Lance le raccourci une fois avec ▶︎. L'iPhone demande l'accès aux données Santé : touche **Autoriser** pour les 4 types. Ouvre ensuite Halage : les pas apparaissent sur l'accueil.
+Touche **OK**. Lance le raccourci une fois avec ▶︎. L'iPhone demande l'accès aux données Santé : touche **Autoriser** pour les 4 types. Ouvre ensuite FIOSSO SPORT : les pas apparaissent sur l'accueil.
 
 ## 2. Le lancer tout seul chaque soir
 
 1. Dans Raccourcis, onglet **Automatisation** > **+** > **Heure de la journée**.
 2. Choisis **21:30**, **Quotidiennement**, puis **Exécuter immédiatement** (pas « Après confirmation »).
-3. Action : **Exécuter le raccourci** > **Halage Santé**. Touche **OK**.
+3. Action : **Exécuter le raccourci** > **FIOSSO Santé**. Touche **OK**.
 
-C'est fini. Chaque soir à 21h30, la journée part vers Halage. Pour envoyer en cours de journée, il suffit de lancer le raccourci à la main.
+C'est fini. Chaque soir à 21h30, la journée part vers FIOSSO SPORT. Pour envoyer en cours de journée, il suffit de lancer le raccourci à la main.
 
 ## Si ça ne marche pas
 
-- **Rien n'apparaît dans Halage** : relance le raccourci et regarde le message en bas. Une erreur 401 ou 403 signifie que la clé ou le code couple est mal copié. Une erreur 404 signifie que l'URL est fausse.
+- **Rien n'apparaît dans FIOSSO SPORT** : relance le raccourci et regarde le message en bas. Une erreur 401 ou 403 signifie que la clé ou le code couple est mal copié. Une erreur 404 signifie que l'URL est fausse.
 - **Le poids n'arrive pas** : c'est normal les jours sans pesée.
 - **La distance est en miles** : dans Santé > Distance (marche et course) > Unités, choisis km.

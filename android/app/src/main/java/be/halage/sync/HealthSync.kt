@@ -23,7 +23,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.roundToInt
 
-/** Configuration collée depuis Halage (Réglages > Données santé). */
+/** Configuration collée depuis FIOSSO SPORT (Réglages > Données santé). */
 data class Config(val url: String, val key: String, val couple: String, val userId: String)
 
 object HealthSync {
@@ -74,9 +74,9 @@ object HealthSync {
 
     private fun round1(d: Double) = (d * 10).roundToInt() / 10.0
 
-    /** Lit les 3 derniers jours dans Health Connect et les envoie à Halage. Renvoie le nombre de jours envoyés. */
+    /** Lit les 3 derniers jours dans Health Connect et les envoie à FIOSSO SPORT. Renvoie le nombre de jours envoyés. */
     suspend fun run(context: Context): Int {
-        val cfg = config(context) ?: error("Code Halage manquant")
+        val cfg = config(context) ?: error("Code FIOSSO SPORT manquant")
         val client = HealthConnectClient.getOrCreate(context)
         val zone = ZoneId.systemDefault()
         val now = Instant.now()

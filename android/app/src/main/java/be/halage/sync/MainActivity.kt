@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
         PermissionController.createRequestPermissionResultContract()
     ) { granted ->
         if (granted.isEmpty()) {
-            say("Accès refusé. Tu peux le donner dans Health Connect > Autorisations des applis > Halage Sync.")
+            say("Accès refusé. Tu peux le donner dans Health Connect > Autorisations des applis > FIOSSO Sync.")
         } else {
             SyncWorker.schedule(this)
             syncNow()
@@ -58,12 +58,12 @@ class MainActivity : ComponentActivity() {
             setOnClickListener { onClick() }
         }
 
-        col.addView(text("Halage Sync", 28f))
-        col.addView(text("Envoie tes pas, calories, distance, poids et séances de Samsung Health vers Halage. Rien d'autre n'est lu.", 15f, "#98a69d"))
+        col.addView(text("FIOSSO Sync", 28f))
+        col.addView(text("Envoie tes pas, calories, distance, poids et séances de Samsung Health vers FIOSSO SPORT. Rien d'autre n'est lu.", 15f, "#98a69d"))
 
-        col.addView(text("1. Colle le code de Halage (Réglages > Données santé)", 16f))
+        col.addView(text("1. Colle le code de FIOSSO SPORT (Réglages > Données santé)", 16f))
         codeField = EditText(this).apply {
-            hint = "Code Halage"
+            hint = "Code FIOSSO SPORT"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
             setTextColor(Color.WHITE)
             setHintTextColor(Color.GRAY)
@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
                 codeField.setText(SAVED)
                 say("Code enregistré. Passe à l'étape 2.")
             } catch (e: Exception) {
-                say("Code invalide : recopie-le depuis Halage.")
+                say("Code invalide : recopie-le depuis FIOSSO SPORT.")
             }
         })
 
@@ -89,7 +89,7 @@ class MainActivity : ComponentActivity() {
         status = text(HealthSync.lastSync(this)?.let { "Dernière synchro : $it" } ?: "", 15f, "#7fd18b")
         col.addView(status)
 
-        col.addView(text("Astuce : dans Samsung Health > Paramètres > Health Connect, autorise le partage de toutes les données pour que Halage les voie.", 13f, "#98a69d"))
+        col.addView(text("Astuce : dans Samsung Health > Paramètres > Health Connect, autorise le partage de toutes les données pour que FIOSSO SPORT les voie.", 13f, "#98a69d"))
 
         setContentView(ScrollView(this).apply {
             setBackgroundColor(bg)
@@ -114,7 +114,7 @@ class MainActivity : ComponentActivity() {
 
     private fun syncNow() {
         if (HealthSync.config(this) == null) {
-            say("Colle d'abord le code Halage.")
+            say("Colle d'abord le code FIOSSO SPORT.")
             return
         }
         say("Synchro en cours…")

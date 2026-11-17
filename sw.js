@@ -1,5 +1,5 @@
 // Hors-ligne : l'app s'ouvre même sans réseau sur le halage.
-const CACHE = 'halage-v3';
+const CACHE = 'halage-v4';
 const SHELL = ['./', 'index.html', 'styles.css', 'data.js', 'app.js', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => {

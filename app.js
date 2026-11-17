@@ -75,7 +75,7 @@ function healthDay(uidv, day) {
   const d = row.data || {};
   return { steps: num(d.steps) || 0, kcal: num(d.active_kcal) || 0, km: num(d.distance_km) || 0, source: row.source };
 }
-// Séances enregistrées par la montre ou le téléphone, sans doublon avec celles faites dans Halage.
+// Séances enregistrées par la montre ou le téléphone, sans doublon avec celles faites dans FIOSSO SPORT.
 function watchActs() {
   const out = [];
   for (const row of S.health) for (const w of (row.data && Array.isArray(row.data.workouts) ? row.data.workouts : [])) {
@@ -330,7 +330,7 @@ function viewTabs() {
 
 function viewOnboarding() {
   return `<div class="page onboard">
-    <div class="brand"><img src="icons/icon.svg" alt="" width="56" height="56"><h1>Halage</h1></div>
+    <div class="brand"><img src="icons/icon.svg" alt="" width="56" height="56"><h1>FIOSSO SPORT</h1></div>
     <p class="lead">Séances au poids du corps, course sur le halage, et vos progrès à deux.</p>
     ${S.cfg.invited ? '<p class="note ok">Lien d’invitation reçu : vos séances seront partagées.</p>' : ''}
     <form data-form="onboard">
@@ -593,7 +593,7 @@ function viewSettings() {
     </form>
     ${on ? `<section><h2>Données santé du téléphone</h2>
       <p class="muted">Pas, calories actives, distance, poids et séances de la montre arrivent ici automatiquement.</p>
-      <p class="tiny"><b>Samsung / Android :</b> dans l’app Halage Sync, colle ce code :</p>
+      <p class="tiny"><b>Samsung / Android :</b> dans l’app FIOSSO Sync, colle ce code :</p>
       <div class="copyrow"><code>${esc(healthCode())}</code><button class="btn ghost" type="button" data-a="copy" data-v="${esc(healthCode())}">Copier</button></div>
       <p class="tiny"><b>iPhone :</b> le Raccourci a besoin de ces 4 valeurs :</p>
       ${[['URL', c.url.replace(/\/+$/, '') + '/rest/v1/halage_health?on_conflict=user_id,day'], ['Clé', c.key], ['Couple', c.couple], ['Identifiant', S.me.id]].map(([l, v]) =>
@@ -631,9 +631,9 @@ const ACT = {
   },
   copy: async d => { try { await navigator.clipboard.writeText(d.v); toast('Copié'); } catch { prompt('Copie ce texte :', d.v); } },
   invite: async () => {
-    const link = inviteLink(), text = 'Rejoins-moi sur Halage pour qu’on s’entraîne ensemble : ' + link;
+    const link = inviteLink(), text = 'Rejoins-moi sur FIOSSO SPORT pour qu’on s’entraîne ensemble : ' + link;
     try {
-      if (navigator.share) await navigator.share({ title: 'Halage', text });
+      if (navigator.share) await navigator.share({ title: 'FIOSSO SPORT', text });
       else { await navigator.clipboard.writeText(link); toast('Lien copié'); }
     } catch { /* partage annulé */ }
   },
