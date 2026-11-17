@@ -27,16 +27,19 @@ function addEvent(kind, data) {
 }
 
 /* ---------- Invitation (#join=...) ---------- */
-(function readInvite() {
-  const m = location.hash.match(/join=([^&]+)/);
-  if (!m) return;
+// Accepte le lien complet ou juste la partie après « join= ». Renvoie true si le lien est valide.
+function applyInvite(text) {
+  const m = String(text || '').match(/join=([^&\s]+)/);
+  if (!m) return false;
   try {
     const j = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
-    Object.assign(S.cfg, { url: j.u, key: j.k, couple: j.c, invited: true });
+    if (!j.c) return false;
+    Object.assign(S.cfg, { url: j.u || S.cfg.url, key: j.k || S.cfg.key, couple: j.c, invited: true });
     persist();
-  } catch { /* lien invalide */ }
-  history.replaceState(null, '', location.pathname);
-})();
+    return true;
+  } catch { return false; }
+}
+if (location.hash.includes('join=')) { applyInvite(location.hash); history.replaceState(null, '', location.pathname); }
 function inviteLink() {
   const raw = JSON.stringify({ u: S.cfg.url, k: S.cfg.key, c: S.cfg.couple });
   return location.origin + location.pathname + '#join=' + encodeURIComponent(btoa(unescape(encodeURIComponent(raw))));
@@ -337,6 +340,7 @@ function viewOnboarding() {
       <label class="field"><span>Ton prénom</span><input name="name" required maxlength="20" autocomplete="given-name"></label>
       ${bodyFields({})}
       <label class="field"><span>Poids actuel (kg)</span><input name="weight" type="number" inputmode="decimal" step="0.1" min="30" max="300" required></label>
+      ${S.cfg.invited ? '' : `<label class="field"><span>Lien d’invitation reçu <small>(si ton ou ta partenaire a déjà l’app)</small></span><input name="invite" placeholder="Colle ici le lien reçu" autocapitalize="off" autocomplete="off"></label>`}
       <fieldset class="field"><legend>Ton niveau</legend>
         ${NIVEAUX.map((n, i) => `<label class="choice"><input type="radio" name="level" value="${n.v}" ${i === 0 ? 'checked' : ''}><span><b>${n.t}</b><small>${n.d}</small></span></label>`).join('')}
       </fieldset>
@@ -643,6 +647,8 @@ const profileData = () => ({ name: S.me.name, level: S.me.level, color: S.me.col
 const FORMS = {
   onboard: f => {
     const kg = num(f.get('weight')), height = +f.get('height');
+    const inv = (f.get('invite') || '').trim();
+    if (inv && !applyInvite(inv)) { toast('Lien d’invitation invalide : recopie-le en entier'); return; }
     if (!S.cfg.couple) S.cfg.couple = uid().replace(/-/g, '').slice(0, 24);   // code secret du couple
     S.me = {
       id: uid(), name: f.get('name').trim(), level: +f.get('level'), color: S.cfg.invited ? 'teal' : 'orange', start: new Date().toISOString(),
