@@ -144,14 +144,14 @@ object HealthSync {
     }
 
     private suspend fun post(cfg: Config, rows: JSONArray) = withContext(Dispatchers.IO) {
-        val conn = URL(cfg.url.trimEnd('/') + "/rest/v1/health_days?on_conflict=user_id,day").openConnection() as HttpURLConnection
+        val conn = URL(cfg.url.trimEnd('/') + "/rest/v1/halage_health?on_conflict=user_id,day").openConnection() as HttpURLConnection
         try {
             conn.requestMethod = "POST"
             conn.doOutput = true
             conn.connectTimeout = 15000
             conn.readTimeout = 15000
             conn.setRequestProperty("apikey", cfg.key)
-            conn.setRequestProperty("Authorization", "Bearer " + cfg.key)
+            conn.setRequestProperty("x-couple", cfg.couple)
             conn.setRequestProperty("Content-Type", "application/json")
             conn.setRequestProperty("Prefer", "resolution=merge-duplicates,return=minimal")
             conn.outputStream.use { it.write(rows.toString().toByteArray(Charsets.UTF_8)) }

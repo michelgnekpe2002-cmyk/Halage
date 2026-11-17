@@ -9,10 +9,10 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 
 const S = {
   me: load('me', null),
-  cfg: Object.assign({ goal: 4, voice: true }, load('cfg', {})),
+  cfg: Object.assign({ goal: 4, voice: true, url: HALAGE_DB.url, key: HALAGE_DB.key }, load('cfg', {})),
   events: load('events', []),
   pending: load('pending', []),
-  health: load('health', []),   // lignes health_days : { user_id, day, data, source }
+  health: load('health', []),   // lignes halage_health : { user_id, day, data, source }
   tab: 'today',
   view: null,          // 'player' | 'finish' | 'log'
   sync: { state: 'off', msg: '' },
@@ -281,8 +281,8 @@ async function sync() {
   if (S.syncing) return;
   S.syncing = true; setSync('busy');
   try {
-    const base = url.trim().replace(/\/+$/, '') + '/rest/v1/events';
-    const h = { apikey: key.trim(), Authorization: 'Bearer ' + key.trim(), 'Content-Type': 'application/json' };
+    const base = url.trim().replace(/\/+$/, '') + '/rest/v1/halage_events';
+    const h = { apikey: key.trim(), 'x-couple': couple, 'Content-Type': 'application/json' };
     const pend = S.events.filter(e => S.pending.includes(e.id)).map(e => ({ ...e, couple }));
     if (pend.length) {
       const r = await fetch(base + '?on_conflict=id', { method: 'POST', headers: { ...h, Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify(pend) });
@@ -296,7 +296,7 @@ async function sync() {
     for (const row of await r2.json()) map.set(row.id, row);
     S.events = [...map.values()].sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
     // Santé : si la table n'existe pas encore, on ignore sans bloquer la synchro.
-    const r3 = await fetch(url.trim().replace(/\/+$/, '') + '/rest/v1/health_days?couple=eq.' + encodeURIComponent(couple) + '&select=user_id,day,data,source&order=day.asc&limit=5000', { headers: h });
+    const r3 = await fetch(url.trim().replace(/\/+$/, '') + '/rest/v1/halage_health?couple=eq.' + encodeURIComponent(couple) + '&select=user_id,day,data,source&order=day.asc&limit=5000', { headers: h });
     if (r3.ok) { S.health = await r3.json(); mergeHealthWeights(); }
     persist(); setSync('ok', 'Synchronisé ' + new Date().toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' }));
   } catch (err) {
@@ -582,7 +582,7 @@ function viewSettings() {
     </form>
     <form data-form="sync">
       <section><h2>Partage à deux</h2>
-        <p class="muted">Vos séances passent par une petite base Supabase gratuite. Le guide fourni avec l’app explique comment la créer en 5 minutes.</p>
+        <p class="muted">Le partage est activé d’office. Pour relier Fiona, envoie-lui le lien ci-dessous : son app rejoindra la tienne. Les champs servent seulement en cas de changement de base.</p>
         <label class="field"><span>URL du projet</span><input name="url" value="${esc(c.url || '')}" placeholder="https://xxxx.supabase.co" inputmode="url" autocapitalize="off"></label>
         <label class="field"><span>Clé publique (anon)</span><input name="key" value="${esc(c.key || '')}" autocapitalize="off" autocomplete="off"></label>
         <label class="field"><span>Code du couple</span><input name="couple" value="${esc(c.couple || '')}" placeholder="généré automatiquement" autocapitalize="off"></label>
@@ -596,7 +596,7 @@ function viewSettings() {
       <p class="tiny"><b>Samsung / Android :</b> dans l’app Halage Sync, colle ce code :</p>
       <div class="copyrow"><code>${esc(healthCode())}</code><button class="btn ghost" type="button" data-a="copy" data-v="${esc(healthCode())}">Copier</button></div>
       <p class="tiny"><b>iPhone :</b> le Raccourci a besoin de ces 4 valeurs :</p>
-      ${[['URL', c.url.replace(/\/+$/, '') + '/rest/v1/health_days?on_conflict=user_id,day'], ['Clé', c.key], ['Couple', c.couple], ['Identifiant', S.me.id]].map(([l, v]) =>
+      ${[['URL', c.url.replace(/\/+$/, '') + '/rest/v1/halage_health?on_conflict=user_id,day'], ['Clé', c.key], ['Couple', c.couple], ['Identifiant', S.me.id]].map(([l, v]) =>
         `<div class="copyrow"><span class="clabel">${l}</span><code>${esc(v)}</code><button class="btn ghost" type="button" data-a="copy" data-v="${esc(v)}">Copier</button></div>`).join('')}
     </section>` : ''}
     <section><h2>Programme</h2>
@@ -643,6 +643,7 @@ const profileData = () => ({ name: S.me.name, level: S.me.level, color: S.me.col
 const FORMS = {
   onboard: f => {
     const kg = num(f.get('weight')), height = +f.get('height');
+    if (!S.cfg.couple) S.cfg.couple = uid().replace(/-/g, '').slice(0, 24);   // code secret du couple
     S.me = {
       id: uid(), name: f.get('name').trim(), level: +f.get('level'), color: S.cfg.invited ? 'teal' : 'orange', start: new Date().toISOString(),
       sex: f.get('sex'), age: +f.get('age'), height, goal: f.get('goal'), adj: {},
@@ -681,7 +682,7 @@ const FORMS = {
   },
   sync: f => {
     S.cfg.url = f.get('url').trim(); S.cfg.key = f.get('key').trim();
-    S.cfg.couple = f.get('couple').trim() || uid().replace(/-/g, '').slice(0, 16);
+    S.cfg.couple = f.get('couple').trim() || uid().replace(/-/g, '').slice(0, 24);
     persist(); render(); sync().then(() => { render(); toast(S.sync.state === 'ok' ? 'Partage activé' : 'Échec : vérifie l’URL et la clé'); });
   },
 };

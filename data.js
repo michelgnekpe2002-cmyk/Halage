@@ -83,6 +83,9 @@ const NIVEAUX = [
 
 const COLORS = { orange: '#ff7a3d', teal: '#35c6a8' };
 
+// Base partagée (clé publique, faite pour être dans une app ; les données sont verrouillées par le code du couple).
+const HALAGE_DB = { url: 'https://fqrduogjgkmuisdlvfwp.supabase.co', key: 'sb_publishable_4XLag0jVQ-ufkQUTmaqegw_DfF7htsb' };
+
 // Version sans saut (IMC ≥ 30 ou genoux sensibles) : même effort cardio, moins d'impact.
 Object.assign(EXOS, {
   stepjack:     { n: 'Pas chassés bras levés', c: "Écarte une jambe puis l'autre en levant les bras. Sans saut, doux pour les genoux." },

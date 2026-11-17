@@ -34,10 +34,10 @@ Ajoute ces actions dans l'ordre (barre de recherche en bas : tape le nom de l'ac
     - À la place de « URL », colle la valeur **URL** copiée depuis Halage.
     - Touche la flèche **>** pour ouvrir les options :
     - **Méthode** : POST
-    - **En-têtes** : ajoute 2 en-têtes :
+    - **En-têtes** : ajoute 3 en-têtes :
       - `apikey` → colle la **Clé**
+      - `x-couple` → colle **Couple**
       - `Prefer` → `resolution=merge-duplicates,return=minimal`
-    - Ajoute aussi l'en-tête `Authorization` → tape `Bearer ` (avec un espace) puis colle la **Clé** juste après.
     - **Corps de la requête** : **JSON**. Ajoute ces champs :
       - `couple` (Texte) → colle **Couple**
       - `user_id` (Texte) → colle **Identifiant**
@@ -61,6 +61,6 @@ C'est fini. Chaque soir à 21h30, la journée part vers Halage. Pour envoyer en 
 
 ## Si ça ne marche pas
 
-- **Rien n'apparaît dans Halage** : relance le raccourci et regarde le message en bas. Une erreur 401 signifie que la clé est mal copiée : vérifie `Bearer ` avec l'espace. Une erreur 404 signifie que l'URL est fausse.
+- **Rien n'apparaît dans Halage** : relance le raccourci et regarde le message en bas. Une erreur 401 ou 403 signifie que la clé ou le code couple est mal copié. Une erreur 404 signifie que l'URL est fausse.
 - **Le poids n'arrive pas** : c'est normal les jours sans pesée.
 - **La distance est en miles** : dans Santé > Distance (marche et course) > Unités, choisis km.

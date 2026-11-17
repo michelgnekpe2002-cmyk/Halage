@@ -13,17 +13,13 @@ Pour qu'un téléphone puisse l'installer, l'app doit être servie en HTTPS. On 
 
 Pour une mise à jour plus tard : modifie les fichiers, puis *Commit* et *Push origin* dans GitHub Desktop.
 
-## 2. Activer le partage à deux (gratuit, 10 min)
+## 2. Le partage à deux
 
-Vos séances passent par une petite base Supabase gratuite.
+Rien à faire : l'app est déjà reliée à la base Supabase (tables `halage_events` et `halage_health` du projet GNEKPE-ESTATE, isolées du reste). Chaque couple a un code secret, créé au premier lancement : sans ce code, personne ne peut lire vos données.
 
-1. Crée un compte sur https://supabase.com, puis **New project** (région : Europe, Frankfurt ou Paris).
-2. Dans le projet, ouvre **SQL Editor > New query**, colle le contenu de `supabase.sql` et clique sur **Run**.
-3. Ouvre **Project Settings > API** (ou *Connect*) et copie :
-   - **Project URL** (`https://xxxx.supabase.co`)
-   - la clé **anon / publishable** (jamais la clé *service_role* ni *secret*).
-4. Dans l'app, va dans **Réglages > Partage à deux**, colle l'URL et la clé, puis touche **Activer**. Le point en haut à droite devient vert.
-5. Touche **Envoyer le lien à ta copine**. En ouvrant ce lien, son app est déjà reliée à la tienne : elle n'a que son profil à remplir.
+Une fois ton profil créé : **Réglages > Envoyer le lien à ta copine**. En ouvrant ce lien, l'app de Fiona rejoint la tienne.
+
+Si la base doit être recréée un jour : coller `supabase.sql` dans Supabase > SQL Editor > Run.
 
 ## 3. Installer sur le téléphone
 
